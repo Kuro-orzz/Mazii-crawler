@@ -1,10 +1,11 @@
 from convert_xml import convert_xml_to_txt
 from general import get_continue_id, save_current_id, log_crawler_error
-from crawler import crawler_word_data
+from crawler import crawler_word_data, crawl_kanji_data
 import time, random, json, sys
 from multiprocessing import Process
 
-def main(args = None):
+def main(args = None, crawl_type = None):
+    print(crawl_type)
     if args is None:
         args = sys.argv[1:]
 
@@ -13,7 +14,7 @@ def main(args = None):
     OUTPUT_FILE = args[2]
     SAVE_FILE = args[3]
     ERROR_FILE = args[4]
-    convert_xml_to_txt(XML_FILE, VOCAB_FILE)
+    convert_xml_to_txt(XML_FILE, VOCAB_FILE, 'word' if crawl_type == 'word' else 'kanji')
 
     with open(VOCAB_FILE, 'r', encoding='utf-8') as f, \
          open(OUTPUT_FILE, 'a', encoding='utf-8') as output:
@@ -28,13 +29,16 @@ def main(args = None):
 
             word = row.strip()
             if not word:
-                log_crawler_error(ERROR_FILE, id, word, 'vocab')
+                log_crawler_error(ERROR_FILE, id, word, 'vocab' if crawl_type == 'word' else 'kanji')
                 continue
 
             data = None
             for _ in range(5):
                 try:
-                    data = crawler_word_data(word)
+                    if crawl_type == 'word':
+                        data = crawler_word_data(word)
+                    elif crawl_type == 'kanji':
+                        data = crawl_kanji_data(word)
                 except Exception as e:
                     log_crawler_error(ERROR_FILE, id, word, 'exception' + str(e))
                     continue
@@ -53,12 +57,13 @@ def main(args = None):
 
 
 if __name__ == "__main__":
-    thread_1 = (["crawl_vocab_1/dict-word-1.xml","crawl_vocab_1/vocab1.txt","crawl_vocab_1/vocab1.ndjson","crawl_vocab_1/save.txt","crawl_vocab_1/error.log"],)
-    thread_2 = (["crawl_vocab_2/dict-word-2.xml","crawl_vocab_2/vocab2.txt","crawl_vocab_2/vocab2.ndjson","crawl_vocab_2/save.txt","crawl_vocab_2/error.log"],)
-    thread_3 = (["crawl_vocab_3/dict-word-3.xml","crawl_vocab_3/vocab3.txt","crawl_vocab_3/vocab3.ndjson","crawl_vocab_3/save.txt","crawl_vocab_3/error.log"],)
-    thread_4 = (["crawl_vocab_4/dict-word-4.xml","crawl_vocab_4/vocab4.txt","crawl_vocab_4/vocab4.ndjson","crawl_vocab_4/save.txt","crawl_vocab_4/error.log"],)
-    thread_5 = (["crawl_vocab_5/dict-word-5.xml","crawl_vocab_5/vocab5.txt","crawl_vocab_5/vocab5.ndjson","crawl_vocab_5/save.txt","crawl_vocab_5/error.log"],)
-    thread_6 = (["crawl_vocab_6/dict-word-6.xml","crawl_vocab_6/vocab6.txt","crawl_vocab_6/vocab6.ndjson","crawl_vocab_6/save.txt","crawl_vocab_6/error.log"],)
+    thread_1 = (["crawl_vocab_1/dict-word-1.xml","crawl_vocab_1/vocab1.txt","crawl_vocab_1/vocab1.ndjson","crawl_vocab_1/save.txt","crawl_vocab_1/error.log"], 'word')
+    thread_2 = (["crawl_vocab_2/dict-word-2.xml","crawl_vocab_2/vocab2.txt","crawl_vocab_2/vocab2.ndjson","crawl_vocab_2/save.txt","crawl_vocab_2/error.log"], 'word')
+    thread_3 = (["crawl_vocab_3/dict-word-3.xml","crawl_vocab_3/vocab3.txt","crawl_vocab_3/vocab3.ndjson","crawl_vocab_3/save.txt","crawl_vocab_3/error.log"], 'word')
+    thread_4 = (["crawl_vocab_4/dict-word-4.xml","crawl_vocab_4/vocab4.txt","crawl_vocab_4/vocab4.ndjson","crawl_vocab_4/save.txt","crawl_vocab_4/error.log"], 'word')
+    thread_5 = (["crawl_vocab_5/dict-word-5.xml","crawl_vocab_5/vocab5.txt","crawl_vocab_5/vocab5.ndjson","crawl_vocab_5/save.txt","crawl_vocab_5/error.log"], 'word')
+    thread_6 = (["crawl_vocab_6/dict-word-6.xml","crawl_vocab_6/vocab6.txt","crawl_vocab_6/vocab6.ndjson","crawl_vocab_6/save.txt","crawl_vocab_6/error.log"], 'word')
+    thread_7 = (["crawl_kanji/dict-kanji-1.xml","crawl_kanji/kanji.txt","crawl_kanji/kanji.ndjson","crawl_kanji/save.txt","crawl_kanji/error.log"], 'kanji')
 
 
     crawlers = [
@@ -68,6 +73,7 @@ if __name__ == "__main__":
         Process(target=main, args=thread_4),
         Process(target=main, args=thread_5),
         Process(target=main, args=thread_6),
+        Process(target=main, args=thread_7)
     ]
     for c in crawlers:
         c.start()

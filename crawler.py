@@ -47,3 +47,53 @@ def crawler_word_data(word: str):
         }
 
     return results
+
+
+def crawl_kanji_data(word: str):
+    url = f"https://mazii.net/vi-VN/search/kanji/javi/{word}"
+
+    r = requests.get(url, timeout=10)
+    soup = BeautifulSoup(r.text, "html.parser")
+
+    results = None
+
+    for item in soup.select("div.kanji-main-infor"):
+        kanji = item.select_one("p.txt-kanji")
+        Kunyomi = [k.text.strip() for k in item.select("span.txt-kun")]
+        Onyomi = [k.text.strip() for k in item.select("span.txt-on")]
+        lines = None
+        jlpt = None
+        meaning = None
+        explain = []
+
+        for block in item.select("div.line-item"):
+            title = block.select_one("h4")
+            if not title:
+                continue
+            title_text = title.get_text(strip=True)
+            info = block.select_one("div.item-infor")
+            if not info:
+                continue
+
+            if "Số nét" in title_text:
+                lines = info.text.strip()
+            elif "JLPT" in title_text:
+                jlpt = info.text.strip()
+            elif "Nghĩa" in title_text:
+                meaning = info.text.strip()
+        
+        for ul in item.select("div.line-item ul.item-infor"):
+            for li in ul.select("li"):
+                explain.append(li.get_text(strip=True))
+
+        results = {
+            "word": kanji.text.strip() if kanji else None,
+            "Kunyomi": Kunyomi if Kunyomi else None,
+            "Onyomi": Onyomi if Onyomi else None,
+            "Strokes": lines,
+            "JLPT": jlpt,
+            "Meaning": meaning,
+            "Explain": explain
+        }
+
+    return results
