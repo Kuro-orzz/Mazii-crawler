@@ -82,7 +82,7 @@ def crawl_kanji_data(word: str):
             elif "Nghĩa" in title_text:
                 meaning = info.text.strip()
         
-        for ul in item.select("div.line-item ul.item-infor"):
+        for ul in item.select("div.line-item ul.item-infor.show-less"):
             for li in ul.select("li"):
                 explain.append(li.get_text(strip=True))
 
