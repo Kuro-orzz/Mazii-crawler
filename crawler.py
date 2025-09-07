@@ -1,8 +1,7 @@
 import requests
 from bs4 import BeautifulSoup
 
-def crawler_word_data(word: str):
-    url = f"https://mazii.net/vi-VN/search/word/javi/{word}"
+def crawler_word_data(url: str):
 
     r = requests.get(url, timeout=10)
     soup = BeautifulSoup(r.text, "html.parser")
@@ -46,11 +45,12 @@ def crawler_word_data(word: str):
             "meaning_detail": meanings
         }
 
-    return results
+        return results
+
+    return None
 
 
-def crawl_kanji_data(word: str):
-    url = f"https://mazii.net/vi-VN/search/kanji/javi/{word}"
+def crawl_kanji_data(url: str):
 
     r = requests.get(url, timeout=10)
     soup = BeautifulSoup(r.text, "html.parser")
@@ -95,5 +95,7 @@ def crawl_kanji_data(word: str):
             "Meaning": meaning,
             "Explain": explain
         }
+        
+        return results
 
-    return results
+    return None

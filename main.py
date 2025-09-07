@@ -1,4 +1,4 @@
-from convert_xml import convert_xml_to_txt
+from link_finder import link_finder, get_word_from_link
 from general import get_continue_id, save_current_id, log_crawler_error, error_url_list
 from crawler import crawler_word_data, crawl_kanji_data
 import time, random, json
@@ -12,7 +12,7 @@ def sleep_to_avoid_ban(req_id: int):
 def main(args, crawl_type = None):
 
     XML_FILE, VOCAB_FILE, OUTPUT_FILE, SAVE_FILE, ERROR_FILE, ERROR_LINK = args
-    convert_xml_to_txt(XML_FILE, VOCAB_FILE, 'word' if crawl_type == 'word' else 'kanji')
+    link_finder(XML_FILE, VOCAB_FILE)
 
     with open(VOCAB_FILE, 'r', encoding='utf-8') as f, \
          open(OUTPUT_FILE, 'a', encoding='utf-8') as output:
@@ -24,28 +24,31 @@ def main(args, crawl_type = None):
             id += 1
             sleep_to_avoid_ban(id)
 
-            word = row.strip()
+            link = row.strip()
+            word = get_word_from_link(link)
             if not word:
                 log_crawler_error(ERROR_FILE, id, word, 'empty word')
+                error_url_list(ERROR_LINK, link)
                 continue
 
+            # Crawl data
             data = None
-            for _ in range(5):
+            for attempt in range(5):
                 try:
                     if crawl_type == 'word':
-                        data = crawler_word_data(word)
+                        data = crawler_word_data(link)
                     elif crawl_type == 'kanji':
-                        data = crawl_kanji_data(word)
+                        data = crawl_kanji_data(link)
                 except Exception as e:
-                    log_crawler_error(ERROR_FILE, id, word, 'exception' + str(e))
-                    continue
+                    log_crawler_error(ERROR_FILE, id, word, f"attempt {attempt+1} exception: {e}")
                 if data: break
 
             if not data:    
                 log_crawler_error(ERROR_FILE, id, word, 'no_data')
+                error_url_list(ERROR_LINK, link)
                 continue
 
-
+            # Save data and id
             record = {"id": str(id), "data": data}
             output.write(json.dumps(record, ensure_ascii=False) + "\n")
             output.flush()

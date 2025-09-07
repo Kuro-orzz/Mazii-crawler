@@ -2,9 +2,7 @@ from bs4 import BeautifulSoup
 import urllib.parse
 
 
-# data_type = "word" for vocabulary
-# data_type = "kanji" for kanji
-def convert_xml_to_txt(input: str, output: str, data_type: str):
+def link_finder(input: str, output: str):
 
     with open(input, 'r', encoding='utf-8') as f, \
          open(output, 'w', encoding='utf-8') as out:
@@ -12,8 +10,13 @@ def convert_xml_to_txt(input: str, output: str, data_type: str):
         data = f.read()
         soup = BeautifulSoup(data, 'xml')
 
-        prefix = f"https://mazii.net/vi-VN/search/{data_type}/javi/"
+        prefix = "https://mazii.net/vi-VN/search/"
 
         for item in soup.find_all('loc'):
             if item.text.startswith(prefix): 
-                out.write(urllib.parse.unquote(item.text[len(prefix):]) + '\n')
+                out.write(item.text + '\n')
+
+
+def get_word_from_link(link: str):
+    word = link.split("javi/")[1]
+    return urllib.parse.unquote(word)
