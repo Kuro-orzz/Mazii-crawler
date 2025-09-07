@@ -9,3 +9,4 @@ services:
       - ./crawl_vocab_4/:/app/crawl_vocab_4/
       - ./crawl_vocab_5/:/app/crawl_vocab_5/
       - ./crawl_vocab_6/:/app/crawl_vocab_6/
+      - ./crawl_kanji/:/app/crawl_kanji/

@@ -18,9 +18,14 @@ def save_current_id(path: str, current_id: int):
 # Redirect all error to error.log file
 def log_crawler_error(path: str, id: int, word: str, err_type: str):
     with open(path, 'a', encoding='utf-8') as f:
-        if err_type == 'vocab':
-            f.write(f"Empty word id: {id}\n")
-        if err_type == 'no_data':
-            f.write(f"No data for id: {id}, word: {word}\n")
+        if 'empty word' in err_type:
+            f.write(f"Empty word id: {id}, {err_type}\n")
+        if 'no_data' in err_type:
+            f.write(f"No data for id: {id}, word: {word}, {err_type}\n")
         if 'exception' in err_type:
-            f.write(f"Exception at id: {id}, word: {word}  {err_type}\n")
+            f.write(f"Exception at id: {id}, word: {word}, {err_type}\n")
+
+# Save error link so we can retry later
+def error_url_list(path: str, link: str):
+    with open(path, 'a', encoding='utf-8') as f:
+        f.write(link + '\n')

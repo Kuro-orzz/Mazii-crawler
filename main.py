@@ -1,19 +1,17 @@
 from convert_xml import convert_xml_to_txt
-from general import get_continue_id, save_current_id, log_crawler_error
+from general import get_continue_id, save_current_id, log_crawler_error, error_url_list
 from crawler import crawler_word_data, crawl_kanji_data
-import time, random, json, sys
+import time, random, json
 from multiprocessing import Process
 
-def main(args = None, crawl_type = None):
-    print(crawl_type)
-    if args is None:
-        args = sys.argv[1:]
+def sleep_to_avoid_ban(req_id: int):
+    time.sleep(random.uniform(0.5, 1.5))
+    if req_id % 50 == 0:
+        time.sleep(random.uniform(7, 10))
 
-    XML_FILE = args[0]
-    VOCAB_FILE = args[1]
-    OUTPUT_FILE = args[2]
-    SAVE_FILE = args[3]
-    ERROR_FILE = args[4]
+def main(args, crawl_type = None):
+
+    XML_FILE, VOCAB_FILE, OUTPUT_FILE, SAVE_FILE, ERROR_FILE, ERROR_LINK = args
     convert_xml_to_txt(XML_FILE, VOCAB_FILE, 'word' if crawl_type == 'word' else 'kanji')
 
     with open(VOCAB_FILE, 'r', encoding='utf-8') as f, \
@@ -23,13 +21,12 @@ def main(args = None, crawl_type = None):
         id = get_continue_id(SAVE_FILE)
 
         for row in lines[id:]:
-            # Avoid ban
-            time.sleep(random.uniform(0.3, 0.8))
             id += 1
+            sleep_to_avoid_ban(id)
 
             word = row.strip()
             if not word:
-                log_crawler_error(ERROR_FILE, id, word, 'vocab' if crawl_type == 'word' else 'kanji')
+                log_crawler_error(ERROR_FILE, id, word, 'empty word')
                 continue
 
             data = None
