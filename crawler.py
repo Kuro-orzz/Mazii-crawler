@@ -1,9 +1,25 @@
 import requests
 from bs4 import BeautifulSoup
+from requests.adapters import HTTPAdapter
+from requests.sessions import Session
+from urllib3.util.retry import Retry
 
-def crawler_word_data(url: str):
+def create_session(retries, backoff_factor):
+    session = requests.Session()
+    retry = Retry(
+        connect=retries,
+        backoff_factor=backoff_factor,
+        status_forcelist=[429, 500, 502, 503, 504] # Retry with these status code
+    )
+    adapter = HTTPAdapter(max_retries=retry)
+    session.mount('http://', adapter=adapter)
+    session.mount('https://', adapter=adapter)
+    return session
 
-    r = requests.get(url, timeout=10)
+
+def crawler_word_data(url: str, session: Session):
+
+    r = session.get(url, timeout=10)
     soup = BeautifulSoup(r.text, "html.parser")
 
     results = None
@@ -50,9 +66,9 @@ def crawler_word_data(url: str):
     return None
 
 
-def crawl_kanji_data(url: str):
+def crawl_kanji_data(url: str, session: Session):
 
-    r = requests.get(url, timeout=10)
+    r = session.get(url, timeout=10)
     soup = BeautifulSoup(r.text, "html.parser")
 
     results = None
